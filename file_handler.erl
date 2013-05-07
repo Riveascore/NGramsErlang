@@ -12,11 +12,14 @@ processFile(File, ChunkSize) ->
 getChunk(IoDevice, 0, ChunkList, ChunkSize) ->
     case io:get_line(IoDevice, "") of
 	eof ->
-	    triplet_handler:send_chunk_off(ChunkList);
+	    FixedList = lists:filter(fun(Entry) -> (Entry /= "\n") and (Entry /= []) end, ChunkList),
+	    triplet_handler:send_chunk_off(FixedList);
 	Line ->
 	    NextLineList = processLine(Line, true),
 	    NewList = lists:append(ChunkList, NextLineList),
-	    triplet_handler:send_chunk_off(NewList),
+	    
+	    FixedList = lists:filter(fun(Entry) -> (Entry /= "\n") and (Entry /= []) end, NewList),
+	    triplet_handler:send_chunk_off(FixedList),
 	    FreshChunkList = processLine(Line, false),
 	    getChunk(IoDevice, ChunkSize-1, FreshChunkList, ChunkSize)
     end;
@@ -24,7 +27,8 @@ getChunk(IoDevice, 0, ChunkList, ChunkSize) ->
 getChunk(IoDevice, LinesLeft, ChunkList, ChunkSize) ->
     case io:get_line(IoDevice, "") of
 	eof ->
-	    triplet_handler:send_chunk_off(ChunkList);
+	    FixedList = lists:filter(fun(Entry) -> (Entry /= "\n") and (Entry /= []) end, ChunkList),
+	    triplet_handler:send_chunk_off(FixedList);
 	Line ->
 	    NextLineList = processLine(Line, false),
 	    NewList = lists:append(ChunkList, NextLineList),
