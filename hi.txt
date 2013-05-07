@@ -1,0 +1,8 @@
+word
+((p.distanceSq(en.pos)*calcAngle(myPos, p))-(en.energy-(myEnergy+(calcAngle(en.pos, p)*((p.distanceSq(en.pos)+(myEnergy-calcAngle(myPos, p)))*2.249793545066834)))))
+0.1442857142857143
+fourth
+
+
+
+io:fwrite("ChunkList ~w~n", [ChunkList]).
