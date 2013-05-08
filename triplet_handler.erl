@@ -13,17 +13,13 @@ send_chunk_off(ChunkList, ListOfTripletGenerators) ->
 count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TripletMap) ->
     receive
 	{triplet, Triplet} ->
-	    % add triplet to ets table
 	    
-	    %TripletMap = [#triplet{triplet = Triplet, count = 1}],
-	    TripletMap = [{Triplet, 1}], %<- so it's easy to work with for etsTable -> anotherEtsTable
-	    %TripletMap = lists:append(TripletMap, [{Triplet, 1}]),
-	    update_counters(TripletMap, countTriplet),
+	    NewTripletMap = lists:append(TripletMap, [{Triplet, 1}]),
+	    update_counters(NewTripletMap, countTriplet),
 
 	    case NumberOfMessagesReceived >= MaxMessagesAllowed of
 		true ->
 		    % if received MaxMessagesAllowed messages or waited 10 seconds, send to overallcounter, erase table, and call count_triplet
-		    io:fwrite("Yep ~p~n",[ets:tab2list(countTriplet)]),
 		    TotalTripletMap = ets:tab2list(countTriplet),
 		    OverallCounterPID ! {tripletMap, TotalTripletMap},
 		    ets:delete_all_objects(countTriplet),
@@ -33,12 +29,10 @@ count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, T
             end
     after
 	5000 ->   
-	    %io:fwrite("waited 10 seconds")
-	    io:fwrite("Table after waiting 10 seconds on node ~w: ~p~n", [node(), ets:tab2list(countTriplet)])
-	    %TotalTripletMap = ets:tab2list(countTriplet),
-	    %OverallCounterPID ! {tripletMap, TotalTripletMap},
-       	    %ets:delete_all_objects(countTriplet),		
-	    %count_triplet(OverallCounterPID, 0, MaxMessagesAllowed, TripletMap) 
+	    TotalTripletMap = ets:tab2list(countTriplet),
+	    OverallCounterPID ! {tripletMap, TotalTripletMap},
+       	    ets:delete_all_objects(countTriplet),		
+	    count_triplet(OverallCounterPID, 0, MaxMessagesAllowed, TripletMap) 
     end.
 
 send_triplets(ListOfTripletCounters, ChunkList) ->
@@ -46,13 +40,10 @@ send_triplets(ListOfTripletCounters, ChunkList) ->
 	true ->  
 	    % get triplet, send message to TC based on hash on LOTCs, call send_trips again
 	    Triplet = lists:sublist(ChunkList, 3),
-	    io:fwrite("Triplet: ~p on node ~p~n", [Triplet, node()]),
 	    [_|Rest] = ChunkList,
-	    %io:fwrite("Rest: ~p on node ~p~n", [Rest, node()]),
 	    Hash = erlang:phash2(Triplet),
-	    ChosenCounterIndex = Hash rem length(ListOfTripletCounters),
+	    ChosenCounterIndex = (Hash rem length(ListOfTripletCounters)) + 1,
 	    TripletCounter = lists:nth(ChosenCounterIndex, ListOfTripletCounters),
-	    io:fwrite("ChosenTripletCounterProcess : ~p~n", [TripletCounter]),
 	    TripletCounter ! {triplet, Triplet},
 
 	    send_triplets(ListOfTripletCounters, Rest);
@@ -64,8 +55,6 @@ send_triplets(ListOfTripletCounters, ChunkList) ->
 generate_triplet(ListOfTripletCounters) ->
     receive
 	{chunk, ChunkList} ->
-	    %do stuff with ChunkList here :)
-	    %io:fwrite("ChunkList on node ~w: ~p~n", [self(), ChunkList]),
 	    send_triplets(ListOfTripletCounters, ChunkList),
 	    generate_triplet(ListOfTripletCounters)
     end.
@@ -105,7 +94,7 @@ overall_counter(TableName, NumberOfFiles, FilesCompleted) ->
 	    NewFilesCompleted = FilesCompleted + 1,
 	    case NumberOfFiles == NewFilesCompleted of
 		true ->
-		    io:fwrite("done");
+		    io:fwrite("Whole program is finished, well done!");
 		false ->
 		    overall_counter(TableName, NumberOfFiles, NewFilesCompleted)
 	    end
@@ -114,11 +103,19 @@ overall_counter(TableName, NumberOfFiles, FilesCompleted) ->
 update_counters([], TableName) ->
     ok;
 update_counters(TripletMap, TableName) ->
-    [Triplet|Rest] = TripletMap,
+    [TripletObject|Rest] = TripletMap,
+
+    Triplet = element(1, TripletObject),
+    Count = element(2, TripletObject),
+    ets:member(TableName, Triplet),
+    %io:fwrite("TableName: ~p, Triplet: ~p, Node: ~p, Exists?: ~p~n", [TableName, Triplet, node(), ets:member(TableName, Triplet)]),
+    
+
     case ets:member(TableName, Triplet) of
 	true ->
-	    ets:update_counter(TableName, element(1,Triplet), element(2,Triplet));
+	    ets:update_counter(TableName, Triplet, Count);
 	false ->
-	    ets:insert_new(TableName, Triplet)
+	    ets:insert_new(TableName, TripletObject)
     end,
+
     update_counters(Rest, TableName).
