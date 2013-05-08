@@ -8,3 +8,46 @@ fourth
 io:fwrite("ChunkList ~w~n", [ChunkList]).
 
 
+
+
+Hosts = [rynite, deathstar, zeus],
+net_adm:world_list(Hosts).
+
+Hosts = [rynite, deathstar],
+net_adm:world_list(Hosts).
+
+
+
+
+
+
+
+
+ListOfTripletGeneratorsX = [a,b,c],
+file_handler:processFile("./numbers.txt", 2, ListOfTripletGeneratorsX).
+
+
+
+
+rd(robot, {name, type=industrial, hobbies, details=[]}).
+
+
+
+
+
+rd(triplet, {triplet=[], count=0}).
+TableName = overallCounter,
+ets:new(TableName, [ordered_set,named_table]),
+Triplet1 = #triplet{triplet = ["bob","fran","stick"], count = 4},
+Triplet2 = #triplet{triplet = ["fred","if","chan"], count = 17},
+TripletMap = [Triplet1, Triplet2],
+ets:insert_new(TableName, {Triplet1#triplet.triplet, Triplet1#triplet.count}).
+
+
+
+
+
+{"bob","fran","stick"}
+{"fred","if","chan"}
+
+TripleMap = [{["
