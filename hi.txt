@@ -65,6 +65,17 @@ ListOfHosts = [rynite, deathstar, zeus],
 FINAL:
 
 ListOfFiles = ["./she.txt"],
+
+
+
+
+
+compile:file(file_handler),
+compile:file(ngrams),
+compile:file(node_handler),
+compile:file(triplet_handler),
+
+ListOfFiles = ["./she.txt"],
 ListOfHosts = [mufasa],
 NumberOfTripletGenerators = 10,
 NumberOfTripletCounters = 5,

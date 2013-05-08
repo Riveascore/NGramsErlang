@@ -16,7 +16,7 @@ processFiles(ListOfFiles, CounterLoop, ChunkSize, ListOfTripletGenerators) ->
 processFile(File, ChunkSize, ListOfTripletGenerators) ->		      
     {ok,IoDevice} = file:open(File,[read]),
     getChunk(IoDevice, ChunkSize, [], ChunkSize, ListOfTripletGenerators),
-    io:fwrite("done").
+    io:fwrite("Done processing a file").
 
 getChunk(IoDevice, 0, ChunkList, ChunkSize, ListOfTripletGenerators) ->
     case io:get_line(IoDevice, "") of

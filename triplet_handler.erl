@@ -1,6 +1,5 @@
 -module(triplet_handler).
 -export([send_triplets/2,send_chunk_off/2,update_counters/2,overall_counter/3,make_triplet_generators/4,make_triplet_counters/4,generate_triplet/1,count_triplet/4]).
--record(triplet, {triplet=[], count=0}).
 
 send_chunk_off([], ListOfTripletGenerators) ->
     ok;
@@ -12,7 +11,6 @@ send_chunk_off(ChunkList, ListOfTripletGenerators) ->
     TripletGenerator ! {chunk, ChunkList}.
  
 count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TripletMap) ->
-    
     receive
 	{triplet, Triplet} ->
 	    % add triplet to ets table
@@ -33,11 +31,13 @@ count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, T
 		    count_triplet(OverallCounterPID, NumberOfMessagesReceived+1, MaxMessagesAllowed, TripletMap)
             end
     after
-	10000 ->    
-	    TotalTripletMap = ets:tab2list(countTriplet),
-	    OverallCounterPID ! {tripletMap, TotalTripletMap},
-       	    ets:delete_all_objects(countTriplet),		
-	    count_triplet(OverallCounterPID, 0, MaxMessagesAllowed, TripletMap) 
+	5000 ->   
+	    %io:fwrite("waited 10 seconds")
+	    io:fwrite("Table after waiting 10 seconds on node ~w: ~p~n", [node(), ets:tab2list(countTriplet)])
+	    %TotalTripletMap = ets:tab2list(countTriplet),
+	    %OverallCounterPID ! {tripletMap, TotalTripletMap},
+       	    %ets:delete_all_objects(countTriplet),		
+	    %count_triplet(OverallCounterPID, 0, MaxMessagesAllowed, TripletMap) 
     end.
 
 send_triplets(ListOfTripletCounters, ChunkList) ->
@@ -60,8 +60,8 @@ generate_triplet(ListOfTripletCounters) ->
     receive
 	{chunk, ChunkList} ->
 	    %do stuff with ChunkList here :)
-	    io:fwrite("ChunkList on node ~w: ~p~n", [self(), ChunkList]),
-	    %send_triplets(ListOfTripletCounters, ChunkList),
+	    %io:fwrite("ChunkList on node ~w: ~p~n", [self(), ChunkList]),
+	    send_triplets(ListOfTripletCounters, ChunkList),
 	    generate_triplet(ListOfTripletCounters)
     end.
 
