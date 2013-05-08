@@ -70,8 +70,10 @@ make_triplet_counters(NumberLeft, TripletCounterList, OverallCounter, CounterLoo
     
     % make new ets table on particular Node, since ets tables
     % can have the same name IF they're on different nodes
-    TableName = countTriplet, 
+    TableName = countTriplet,
     spawn(Node, ets, new, [TableName, [ordered_set, named_table]]),
+    %io:fwrite("In make_triplet_coutners, TableName: ~p exists: ~p~n", [TableName, ets:info(TableName)]),
+    %io:fwrite("Node ~p, Node ~p, Node ~p~n", [Node, Node, Node]),
     
     NewList = lists:append(TripletCounterList, [TripletCounterPID]),
     make_triplet_counters(NumberLeft-1, NewList, OverallCounter, CounterLoopPID).
@@ -107,6 +109,7 @@ update_counters(TripletMap, TableName) ->
 
     Triplet = element(1, TripletObject),
     Count = element(2, TripletObject),
+    io:fwrite("TableName: ~p exists: ~p~n", [TableName, ets:info(TableName)]),
     ets:member(TableName, Triplet),
     %io:fwrite("TableName: ~p, Triplet: ~p, Node: ~p, Exists?: ~p~n", [TableName, Triplet, node(), ets:member(TableName, Triplet)]),
     

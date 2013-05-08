@@ -83,9 +83,10 @@ ChunkSize = 2,
 ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
 
 
-
-
-
+TableName = beeTable,
+net_adm:ping(b@mufasa),
+Bee = lists:nth(1, nodes()),
+spawn(Bee, ets, new, [TableName, [named_table]]).
 
 
 
