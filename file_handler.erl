@@ -1,9 +1,17 @@
 -module(file_handler).
 %-export([file_reader/2,make_file_readers/1,normalize_list/1,index/1,processFile/1,processChunks/2,processChunk/2]).
--export([normalize_list/1, processFile/3, getChunk/5, processLine/2]).
+-export([normalize_list/1, processFile/3, getChunk/5, processLine/2, processFiles/4]).
 
 normalize_list(List) ->
     lists:map(fun(Word) -> string:to_lower(Word) end, List).
+
+processFiles([], CounterLoop, ChunkSize, ListOfTripletGenerators) ->
+    ok;
+processFiles(ListOfFiles, CounterLoop, ChunkSize, ListOfTripletGenerators) ->
+    [File|Rest] = ListOfFiles,
+    Node = node_handler:round_robin(CounterLoop),
+    spawn(Node, file_handler, processFile, [File, ChunkSize, ListOfTripletGenerators]),
+    processFiles(Rest, CounterLoop, ChunkSize, ListOfTripletGenerators).
 
 processFile(File, ChunkSize, ListOfTripletGenerators) ->		      
     {ok,IoDevice} = file:open(File,[read]),

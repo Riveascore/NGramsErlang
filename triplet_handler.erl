@@ -25,7 +25,7 @@ make_triplet_counters(0, TripletCounterList, OverallCounter, CounterLoopPID) ->
 make_triplet_counters(NumberLeft, TripletCounterList, OverallCounter, CounterLoopPID) ->
     Node = node_handler:round_robin(CounterLoopPID),
     TripletCounterPID = spawn(Node, triplet_handler, count_triplet, [OverallCounter]),
-    NewList = lists:append(TripletCounterList, TripletCounterPID),
+    NewList = lists:append(TripletCounterList, [TripletCounterPID]),
     make_triplet_counters(NumberLeft-1, NewList, OverallCounter, CounterLoopPID).
 
 make_triplet_generators(0, TripletGeneratorList, TripletCounterList, CounterLoopPID) ->

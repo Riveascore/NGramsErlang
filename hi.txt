@@ -51,3 +51,27 @@ ets:insert_new(TableName, {Triplet1#triplet.triplet, Triplet1#triplet.count}).
 {"fred","if","chan"}
 
 TripleMap = [{["
+
+
+
+
+
+
+
+
+
+
+ListOfHosts = [rynite, deathstar, zeus],
+FINAL:
+
+ListOfFiles = ["./numbers.txt"],
+ListOfHosts = [mufasa],
+NumberOfTripletGenerators = 10,
+NumberOfTripletCounters = 5,
+ChunkSize = 2,
+ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
+
+
+
+
+
