@@ -16,13 +16,14 @@ count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, T
 	    % add triplet to ets table
 	    
 	    %TripletMap = [#triplet{triplet = Triplet, count = 1}],
-	    TripletMap = [{[Triplet], 1}], %<- so it's easy to work with for etsTable -> anotherEtsTable
+	    TripletMap = [{Triplet, 1}], %<- so it's easy to work with for etsTable -> anotherEtsTable
 	    %TripletMap = lists:append(TripletMap, [{Triplet, 1}]),
 	    update_counters(TripletMap, countTriplet),
 
 	    case NumberOfMessagesReceived >= MaxMessagesAllowed of
 		true ->
 		    % if received MaxMessagesAllowed messages or waited 10 seconds, send to overallcounter, erase table, and call count_triplet
+		    io:fwrite("Yep ~p~n",[ets:tab2list(countTriplet)]),
 		    TotalTripletMap = ets:tab2list(countTriplet),
 		    OverallCounterPID ! {tripletMap, TotalTripletMap},
 		    ets:delete_all_objects(countTriplet),
@@ -45,10 +46,14 @@ send_triplets(ListOfTripletCounters, ChunkList) ->
 	true ->  
 	    % get triplet, send message to TC based on hash on LOTCs, call send_trips again
 	    Triplet = lists:sublist(ChunkList, 3),
+	    io:fwrite("Triplet: ~p on node ~p~n", [Triplet, node()]),
 	    [_|Rest] = ChunkList,
+	    %io:fwrite("Rest: ~p on node ~p~n", [Rest, node()]),
 	    Hash = erlang:phash2(Triplet),
-	    ChosenCounter = Hash rem length(ListOfTripletCounters),
-	    ChosenCounter ! {triplet, Triplet},
+	    ChosenCounterIndex = Hash rem length(ListOfTripletCounters),
+	    TripletCounter = lists:nth(ChosenCounterIndex, ListOfTripletCounters),
+	    io:fwrite("ChosenTripletCounterProcess : ~p~n", [TripletCounter]),
+	    TripletCounter ! {triplet, Triplet},
 
 	    send_triplets(ListOfTripletCounters, Rest);
 	false ->
