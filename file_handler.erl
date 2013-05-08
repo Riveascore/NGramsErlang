@@ -56,3 +56,5 @@ processLine(Line, false) ->
     FixedList = lists:filter(fun(Entry) -> Entry /= " " end, InitialList),
     Normalized = normalize_list(FixedList),
     Normalized.
+
+

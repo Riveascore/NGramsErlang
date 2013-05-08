@@ -44,7 +44,7 @@ TripletMap = [Triplet1, Triplet2],
 ets:insert_new(TableName, {Triplet1#triplet.triplet, Triplet1#triplet.count}).
 
 
-
+%spawn(Node, ets, new, [TableName, [ordered_set, named_table]]),
 
 
 {"bob","fran","stick"}
@@ -60,16 +60,59 @@ TripleMap = [{["
 
 
 
-
+ListOfFiles = ["./numbers.txt", "./hi.txt"],
 ListOfHosts = [rynite, deathstar, zeus],
 FINAL:
 
-ListOfFiles = ["./numbers.txt"],
+ListOfFiles = ["./she.txt"],
 ListOfHosts = [mufasa],
 NumberOfTripletGenerators = 10,
 NumberOfTripletCounters = 5,
 ChunkSize = 2,
 ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TableName = tripletCounter,
+ets:new(TableName, [ordered_set,named_table]),
+Triplet1 = {["bob","fran","stick"], 4},
+Triplet2 = {["fred","if","chan"], 17},
+TripletMap = [Triplet1, Triplet2],
+ets:insert_new(TableName, lists:nth(1, TripletMap)),
+ets:insert_new(TableName, lists:nth(2, TripletMap)),
+[Fir|Sec] = ets:tab2list(TableName),
+
+TableName2 = overallCounter,
+ets:new(TableName2, [ordered_set,named_table]),
+ets:insert_new(TableName2, Fir),
+ets:tab2list(TableName2).
+
+
+
+
+
+
+
+
+
+
 
 
 
