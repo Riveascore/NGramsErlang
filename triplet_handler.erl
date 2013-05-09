@@ -123,16 +123,16 @@ overall_counter(TableName, NumberOfFiles, FilesCompleted) ->
 	    %maybe spawn is pooping itself?
 	    %spawn(triplet_handler, update_counters, [TripletMap, TableName]),
 	    update_counters(TripletMap, TableName),
-	    overall_counter(TableName, NumberOfFiles, FilesCompleted);
-	{file_finished} ->
-	    NewFilesCompleted = FilesCompleted + 1,
-	    case NumberOfFiles == NewFilesCompleted of
-		true ->
-		    %io:fwrite("Whole program is finished, well done!");
-		    io:fwrite("Whole Table: ~p~n", [ets:tab2list(TableName)]);
-		false ->
-		    overall_counter(TableName, NumberOfFiles, NewFilesCompleted)
-	    end
+	    overall_counter(TableName, NumberOfFiles, FilesCompleted)
+	%% {file_finished} ->
+	%%     NewFilesCompleted = FilesCompleted + 1,
+	%%     case NumberOfFiles == NewFilesCompleted of
+	%% 	true ->
+	%% 	    %io:fwrite("Whole program is finished, well done!");
+	%% 	    io:fwrite("Whole Table: ~p~n", [ets:tab2list(TableName)]);
+	%% 	false ->
+	%% 	    overall_counter(TableName, NumberOfFiles, NewFilesCompleted)
+	%%     end
     end.
 
 update_counters([], TableName) ->
