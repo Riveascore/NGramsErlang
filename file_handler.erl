@@ -1,22 +1,24 @@
 -module(file_handler).
-%-export([file_reader/2,make_file_readers/1,normalize_list/1,index/1,processFile/1,processChunks/2,processChunk/2]).
--export([normalize_list/1, processFile/3, getChunk/5, processLine/2, processFiles/4]).
+-export([normalize_list/1, processFile/4, getChunk/5, processLine/2, processFiles/5]).
 
 normalize_list(List) ->
     lists:map(fun(Word) -> string:to_lower(Word) end, List).
 
-processFiles([], CounterLoop, ChunkSize, ListOfTripletGenerators) ->
+processFiles([], CounterLoop, ChunkSize, ListOfTripletGenerators, OverallCounterPID) ->
     ok;
-processFiles(ListOfFiles, CounterLoop, ChunkSize, ListOfTripletGenerators) ->
+processFiles(ListOfFiles, CounterLoop, ChunkSize, ListOfTripletGenerators, OverallCounterPID) ->
+    %io:fwrite("OverallCounterPID: ~p~n", [OverallCounterPID]),
     [File|Rest] = ListOfFiles,
     Node = node_handler:round_robin(CounterLoop),
-    spawn(Node, file_handler, processFile, [File, ChunkSize, ListOfTripletGenerators]),
-    processFiles(Rest, CounterLoop, ChunkSize, ListOfTripletGenerators).
+    spawn(Node, file_handler, processFile, [File, ChunkSize, ListOfTripletGenerators, OverallCounterPID]),
+    processFiles(Rest, CounterLoop, ChunkSize, ListOfTripletGenerators, OverallCounterPID).
 
-processFile(File, ChunkSize, ListOfTripletGenerators) ->		      
+processFile(File, ChunkSize, ListOfTripletGenerators, OverallCounterPID) ->		      
     {ok,IoDevice} = file:open(File,[read]),
     getChunk(IoDevice, ChunkSize, [], ChunkSize, ListOfTripletGenerators),
-    io:fwrite("Done processing a file: ~p on node: ~p~n", [File, node()]).
+    %io:fwrite("Done processing a file: ~p on node: ~p~n", [File, node()]).
+    OverallCounterPID ! {file_finished}.
+    
 
 getChunk(IoDevice, 0, ChunkList, ChunkSize, ListOfTripletGenerators) ->
     case io:get_line(IoDevice, "") of

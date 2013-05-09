@@ -11,7 +11,7 @@ ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCount
 
     %create ets table for counting total triplet counts
     TableName = overallCounter,
-    ets:new(TableName, [ordered_set,named_table]),
+    %ets:new(TableName, [ordered_set,named_table]),
     
 
     %create counter_loop for round robin distribution of processes
@@ -19,7 +19,7 @@ ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCount
 
     %spawn process to handle total counts
     OverallCounterNode = node_handler:round_robin(CounterLoop),
-    OverallCounterPID = spawn(OverallCounterNode, triplet_handler, overall_counter, [TableName, length(ListOfFiles), 0]),
+    OverallCounterPID = spawn(OverallCounterNode, triplet_handler, overall_counter, [TableName, length(ListOfFiles), 0, true]),
       
     %make triplet counter list
     TripletCounterList = make_triplet_counters(NumberOfTripletCounters, [], OverallCounterPID, CounterLoop),
@@ -28,4 +28,4 @@ ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCount
     TripletGeneratorList = make_triplet_generators(NumberOfTripletGenerators, [], TripletCounterList, CounterLoop),
     
     %Start handling files n stuff
-    file_handler:processFiles(ListOfFiles, CounterLoop, ChunkSize, TripletGeneratorList).
+    file_handler:processFiles(ListOfFiles, CounterLoop, ChunkSize, TripletGeneratorList, OverallCounterPID).

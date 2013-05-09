@@ -83,6 +83,23 @@ ChunkSize = 2,
 ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
 
 
+
+
+
+NumLeft = 76,
+TableNamePrefix = atom_to_list(countTriplet),
+TableNumber = lists:flatten(io_lib:format("~p", [NumLeft])),
+TableName = list_to_atom(TableNamePrefix++TableNumber).
+
+
+
+
+
+
+
+
+
+
 TableName = beeTable,
 net_adm:ping(b@mufasa),
 Bee = lists:nth(1, nodes()),
@@ -130,3 +147,18 @@ ets:tab2list(TableName2).
 
 
 
+
+
+
+
+
+
+
+
+
+ListOfFiles = ["./numbers.txt"],
+ListOfHosts = [mufasa],
+NumberOfTripletGenerators = 10,
+NumberOfTripletCounters = 5,
+ChunkSize = 1,
+ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
