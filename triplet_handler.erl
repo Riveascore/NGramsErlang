@@ -1,61 +1,51 @@
 -module(triplet_handler).
--export([overall_counter/4,count_triplet/5,send_triplets/2,send_chunk_off/2,update_counters/2,overall_counter/3,make_triplet_generators/4,make_triplet_counters/4,generate_triplet/1,count_triplet/6]).
+-export([overall_counter/4,count_triplet/4,send_triplets/3,send_chunk_off/3,update_counters/2,overall_counter/3,make_triplet_generators/4,make_triplet_counters/4,generate_triplet/1,count_triplet/5]).
 
-send_chunk_off([], ListOfTripletGenerators) ->
+send_chunk_off([], ListOfTripletGenerators, Finished) ->
     ok;
 
-send_chunk_off(ChunkList, ListOfTripletGenerators) ->
+send_chunk_off(ChunkList, ListOfTripletGenerators, Finished) ->
     % here, send message with Chunk to randomly selected triplet_generator
     RandomNumber = crypto:rand_uniform(1, length(ListOfTripletGenerators)+1),
     TripletGenerator = lists:nth(RandomNumber, ListOfTripletGenerators),
-    TripletGenerator ! {chunk, ChunkList}.
- 
-count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TripletMap, TableNameSuffix, true) ->
-    %need helper function cuz Erlang won't let us spawn(Node, ets, new, [TableName, [named_table]]), well it does, but apparently it doesn't?...
-    %Name = countTriplet + 
+    TripletGenerator ! {chunk, ChunkList, Finished}.
 
+count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TableNameSuffix, true) ->
 
     TableNamePrefix = atom_to_list(countTriplet),
     TableName = list_to_atom(TableNamePrefix++TableNameSuffix),
-    io:fwrite("TableName: ~p, on node: ~p~n", [TableName, node()]),
 
     ets:new(TableName, [named_table]),
-    count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TripletMap, TableName).
+    count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TableName).
 
-count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TripletMap, TableName) ->
+count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, TableName) ->
     receive
-	{triplet, Triplet} ->
-	    
-	    io:fwrite("NumberOfMessagesReceived: ~p~n", [NumberOfMessagesReceived]),
-	    NewTripletMap = lists:append(TripletMap, [{Triplet, 1}]),
-	    update_counters(NewTripletMap, TableName),
+	{triplet, Triplet, Finished} ->
+	    io:fwrite("Triplet: ~p, on node: ~p~n", [Triplet, node()]),
+	    %NewTripletMap = lists:append(TripletMap, [{Triplet, 1}]),
+	    update_counters([{Triplet, 1}], TableName),
 
 	    case NumberOfMessagesReceived >= MaxMessagesAllowed of
 		true ->
-		    % if received MaxMessagesAllowed messages or waited 10 seconds, send to overallcounter, erase table, and call count_triplet
 		    TotalTripletMap = ets:tab2list(TableName),
-		    io:fwrite("count_triplet finished counting, result: ~p~n", [TotalTripletMap]),
-		    OverallCounterPID ! {tripletMap, TotalTripletMap},
+		    io:fwrite("TotalTripletMap: ~p~n", [TotalTripletMap]),
+		    OverallCounterPID ! {tripletMap, TotalTripletMap, Finished},
 		    ets:delete_all_objects(TableName),
-		    count_triplet(OverallCounterPID, 0, MaxMessagesAllowed, TripletMap, TableName);
+		    NewNumberOfMessagesReceived = 0;
 		false ->
-		    count_triplet(OverallCounterPID, NumberOfMessagesReceived+1, MaxMessagesAllowed, TripletMap, TableName)
+		    NewNumberOfMessagesReceived = NumberOfMessagesReceived+1
             end
     after
-	5000 ->   
-	    TotalTripletMap = ets:tab2list(TableName),
-	    case TotalTripletMap /= [] of
-		true ->
-		    io:fwrite("count_triplet finished counting, result: ~p~n", [TotalTripletMap]),
-		    OverallCounterPID ! {tripletMap, TotalTripletMap},
-		    ets:delete_all_objects(TableName);
-		false ->
-		    ok
-	    end,
-	    count_triplet(OverallCounterPID, 0, MaxMessagesAllowed, TripletMap, TableName) 
-    end.
+	1000 ->
+	    TotalTripletMap = ets:tab2list(TableName),  
+	    OverallCounterPID ! {tripletMap, TotalTripletMap, false},
+	    ets:delete_all_objects(TableName),
+	    NewNumberOfMessagesReceived = 0
+    end,
+    
+    count_triplet(OverallCounterPID, NewNumberOfMessagesReceived, MaxMessagesAllowed, TableName).
 
-send_triplets(ListOfTripletCounters, ChunkList) ->
+send_triplets(ListOfTripletCounters, ChunkList, Finished) ->
     case length(ChunkList) > 2 of
 	true ->  
 	    % get triplet, send message to TC based on hash on LOTCs, call send_trips again
@@ -64,9 +54,9 @@ send_triplets(ListOfTripletCounters, ChunkList) ->
 	    Hash = erlang:phash2(Triplet),
 	    ChosenCounterIndex = (Hash rem length(ListOfTripletCounters)) + 1,
 	    TripletCounter = lists:nth(ChosenCounterIndex, ListOfTripletCounters),
-	    TripletCounter ! {triplet, Triplet},
+	    TripletCounter ! {triplet, Triplet, Finished},
 
-	    send_triplets(ListOfTripletCounters, Rest);
+	    send_triplets(ListOfTripletCounters, Rest, Finished);
 	false ->
 	    ok
     end.
@@ -74,8 +64,8 @@ send_triplets(ListOfTripletCounters, ChunkList) ->
 
 generate_triplet(ListOfTripletCounters) ->
     receive
-	{chunk, ChunkList} ->
-	    send_triplets(ListOfTripletCounters, ChunkList),
+	{chunk, ChunkList, Finished} ->
+	    send_triplets(ListOfTripletCounters, ChunkList, Finished),
 	    generate_triplet(ListOfTripletCounters)
     end.
 
@@ -86,17 +76,11 @@ make_triplet_counters(NumberLeft, TripletCounterList, OverallCounter, CounterLoo
     Node = node_handler:round_robin(CounterLoopPID),
     
     MaxMessagesAllowed = crypto:rand_uniform(2, 10),
-
-    %TableName = countTriplet,
-    %TableName = countTriplet + NumberLeft,
-
-
     
     TableNameSuffix = lists:flatten(io_lib:format("~p", [NumberLeft])),
 
-
     %spawn(Node, ets, new, [TableName, [ordered_set, named_table]]), <- this is old and doesn't work cuz Erlang is mean :(
-    TripletCounterPID = spawn(Node, triplet_handler, count_triplet, [OverallCounter, 0, MaxMessagesAllowed, [], TableNameSuffix, true]),
+    TripletCounterPID = spawn(Node, triplet_handler, count_triplet, [OverallCounter, 0, MaxMessagesAllowed, TableNameSuffix, true]),
     
     NewList = lists:append(TripletCounterList, [TripletCounterPID]),
     make_triplet_counters(NumberLeft-1, NewList, OverallCounter, CounterLoopPID).
@@ -118,21 +102,21 @@ overall_counter(TableName, NumberOfFiles, FilesCompleted, true) ->
 
 overall_counter(TableName, NumberOfFiles, FilesCompleted) ->
     receive
-	{tripletMap, TripletMap} ->
-	    io:fwrite("TripletMap: ~p, on node: ~p~n", [TripletMap, node()]),
-	    %maybe spawn is pooping itself?
-	    %spawn(triplet_handler, update_counters, [TripletMap, TableName]),
+	{tripletMap, TripletMap, Finished} ->
 	    update_counters(TripletMap, TableName),
-	    overall_counter(TableName, NumberOfFiles, FilesCompleted)
-	%% {file_finished} ->
-	%%     NewFilesCompleted = FilesCompleted + 1,
-	%%     case NumberOfFiles == NewFilesCompleted of
-	%% 	true ->
-	%% 	    %io:fwrite("Whole program is finished, well done!");
-	%% 	    io:fwrite("Whole Table: ~p~n", [ets:tab2list(TableName)]);
-	%% 	false ->
-	%% 	    overall_counter(TableName, NumberOfFiles, NewFilesCompleted)
-	%%     end
+	    case Finished of
+		true ->
+		    NewFilesCompleted = FilesCompleted + 1;
+		false ->
+		    NewFilesCompleted = FilesCompleted
+	    end,
+
+	    case NumberOfFiles >= NewFilesCompleted of
+		true ->
+		   io:fwrite("Whole Table: ~p~n", [ets:tab2list(TableName)]);
+		false ->
+		   overall_counter(TableName, NumberOfFiles, NewFilesCompleted)
+	    end
     end.
 
 update_counters([], TableName) ->
