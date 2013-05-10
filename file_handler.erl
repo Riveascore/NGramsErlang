@@ -40,7 +40,7 @@ getChunk(IoDevice, LinesLeft, ChunkList, ChunkSize, ListOfTripletGenerators, Ove
     case io:get_line(IoDevice, "") of
 	eof ->
 	    FixedList = lists:filter(fun(Entry) -> (Entry /= "\n") and (Entry /= []) end, ChunkList),
-	    io:fwrite("FixedList: ~p~n", [FixedList]),
+	    %io:fwrite("FixedList: ~p~n", [FixedList]),
 	    OverallCounterPID ! {added_triplets, length(FixedList)-2},
 	    OverallCounterPID ! {eof},
 	    handle_triplets:send_chunk_off(FixedList, ListOfTripletGenerators);

@@ -160,7 +160,7 @@ ets:tab2list(TableName2).
 
 
 
-ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt"],
+ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt"],
 ListOfHosts = [mufasa],
 NumberOfTripletGenerators = 10,
 NumberOfTripletCounters = 5,

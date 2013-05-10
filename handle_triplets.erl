@@ -26,7 +26,6 @@ count_triplet(OverallCounterPID, NumberOfMessagesReceived, MaxMessagesAllowed, T
 		true ->
 		    %somehow we're not sending the correct amount of NumberOfMessagesReceived here :(
 		    TripletMap = ets:tab2list(TableName),
-		    %io:fwrite("TripletMap: ~p, sent from node: ~p, to overall counter, NumberOfMessagesReceived: ~p~n", [TripletMap, node(), NumberOfMessagesReceived+1]),
 		    OverallCounterPID ! {triplet_map, TripletMap, NumberOfMessagesReceived+1},
 		    ets:delete_all_objects(TableName),
 		    NewNumberOfMessagesReceived = 0;
