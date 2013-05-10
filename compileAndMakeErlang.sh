@@ -1,4 +1,4 @@
 #!/bin/bash
 
-erl -compile file_handler ngrams node_handler triplet_handler
+erl -compile node_handler file_handler triplet_handler ngrams
 erl -make

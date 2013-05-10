@@ -1,9 +1,10 @@
 -module(ngrams).
 -export([ngrams/5]).
--import(triplet_handler, [make_triplet_counters/4, make_triplet_generators/4]).
+-import(handle_triplets, [make_triplet_counters/4, make_triplet_generators/4]).
 
 ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize) ->
     
+    StartTime = now(),
     %FIRST, very important!!!
     %Have to ping all nodes based off of hosts so that round_robin doesn't poop itself
     net_adm:world_list(ListOfHosts),
@@ -19,7 +20,7 @@ ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCount
 
     %spawn process to handle total counts
     OverallCounterNode = node_handler:round_robin(CounterLoop),
-    OverallCounterPID = spawn(OverallCounterNode, triplet_handler, overall_counter, [TableName, length(ListOfFiles), 0, true]),
+    OverallCounterPID = spawn(OverallCounterNode, handle_triplets, overall_counter, [StartTime, length(ListOfFiles), 0, 0, -1, 0, true]),
       
     %make triplet counter list
     TripletCounterList = make_triplet_counters(NumberOfTripletCounters, [], OverallCounterPID, CounterLoop),

@@ -22,9 +22,9 @@ net_adm:world_list(Hosts).
 
 
 
-
+OCP = self(),
 ListOfTripletGeneratorsX = [a,b,c],
-file_handler:processFile("./numbers.txt", 2, ListOfTripletGeneratorsX).
+file_handler:processFile("./numbers.txt", 2, ListOfTripletGeneratorsX, OCP).
 
 
 
@@ -126,6 +126,10 @@ Triplet2 = {["fred","if","chan"], 17},
 TripletMap = [Triplet1, Triplet2],
 ets:insert_new(TableName, lists:nth(1, TripletMap)),
 ets:insert_new(TableName, lists:nth(2, TripletMap)),
+ets:tab2file(TableName, "./tripletsMap.txt").
+
+
+
 [Fir|Sec] = ets:tab2list(TableName),
 
 TableName2 = overallCounter,
@@ -156,9 +160,9 @@ ets:tab2list(TableName2).
 
 
 
-ListOfFiles = ["./numbers.txt"],
+ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt"],
 ListOfHosts = [mufasa],
 NumberOfTripletGenerators = 10,
 NumberOfTripletCounters = 5,
-ChunkSize = 1,
+ChunkSize = 10,
 ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
