@@ -146,6 +146,18 @@ ets:tab2list(TableName2).
 
 
 
+ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt"],
+ListOfHosts = [tedlar],
+NumberOfTripletGenerators = 10,
+NumberOfTripletCounters = 5,
+ChunkSize = 10,
+ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
+
+
+
+
+
+net_adm:ping(d@neoprene).
 
 
 
@@ -153,15 +165,20 @@ ets:tab2list(TableName2).
 
 
 
+ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt"],
+ListOfHosts = [rynite, deathstar, zeus],
+NumberOfTripletGenerators = 10,
+NumberOfTripletCounters = 5,
+ChunkSize = 10,
+ngrams:ngrams(ListOfFiles, ListOfHosts, NumberOfTripletGenerators, NumberOfTripletCounters, ChunkSize).
 
 
 
 
 
 
-
-ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt"],
-ListOfHosts = [mufasa],
+ListOfFiles = ["./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt", "./sheCopy.txt"],
+ListOfHosts = [rynite, deathstar, zeus, avenger],
 NumberOfTripletGenerators = 10,
 NumberOfTripletCounters = 5,
 ChunkSize = 10,

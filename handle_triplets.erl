@@ -124,7 +124,7 @@ overall_counter(StartTime, NumberOfFiles, FilesCompleted, AddedTriplets, TotalTr
 		true ->
 		    %tv:start();
 		    TimeStop = now(),
-		    %io:fwrite("Table, on node: ~p~n~p~n", [node(), ets:tab2list(overallCounter)]),
+		    %io:fwrite("Table: ~p~n on node: ~p~n", [ets:tab2list(overallCounter), node()]),
 		    io:fwrite("Total time: ~p~n", [timer:now_diff(TimeStop, StartTime)/1000000]);
 		false ->
 		    overall_counter(StartTime, NumberOfFiles, FilesCompleted, AddedTriplets, TotalTriplets, NewTripletsReceived)
